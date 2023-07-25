@@ -8,11 +8,25 @@ import Confetti from 'react-confetti';
 export default function App() {
   const [dice, setDice] = useState(AllNewDice())
   const [tenzies, setTenzies] = useState(false)
+  const [rolls, setRolls] = useState(1)
+  const [timer, setTimer] = useState(0);
+  const [isTimerActive, setIsTimerActive] = useState(false);
 
+
+  useEffect(() => {
+    if (isTimerActive && !tenzies) {
+      const interval = setInterval(() => {
+        setTimer((prevTimer) => prevTimer + 1);
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [isTimerActive, tenzies]);
 
   useEffect(() => {
     if (checkHolds() && checkNumbers()) {
       setTenzies(true)
+      setIsTimerActive(false)
     }
   }, [dice])
 
@@ -48,6 +62,7 @@ export default function App() {
 
   function rollDice() {
     if (!tenzies) {
+      setRolls(prevNum => prevNum + 1)
       setDice(oldDice => {
         return oldDice.map(die => {
           return die.isHeld ?
@@ -55,10 +70,13 @@ export default function App() {
             : generateNewDie()
         })
       })
+      setIsTimerActive(true)
     } else {
+      setRolls(0)
       setTenzies(false)
       setDice(AllNewDice)
-
+      setIsTimerActive(false);
+      setTimer(0);
     }
 
   }
@@ -87,6 +105,7 @@ export default function App() {
     <main className="container">
 
       <h1>Tenzies</h1>
+
       <p>Roll until dice are the same. Click each die to freeze it at its current value between rolls.</p>
 
       <div className="die-container">
@@ -99,6 +118,8 @@ export default function App() {
         className='roll-btn'
       >{tenzies ? "New Game" : "Roll"}
       </button>
+      <div>Total Rolls: {rolls}</div>
+      <div>Timer: {timer} seconds</div>
       {tenzies && <Confetti />}
     </main >
   )
